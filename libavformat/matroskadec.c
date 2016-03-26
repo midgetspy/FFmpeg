@@ -139,6 +139,10 @@ typedef struct MatroskaTrackVideo {
     EbmlBin color_space;
     uint64_t stereo_mode;
     uint64_t alpha_mode;
+    uint64_t crop_bottom;
+    uint64_t crop_top;
+    uint64_t crop_left;
+    uint64_t crop_right;
 } MatroskaTrackVideo;
 
 typedef struct MatroskaTrackAudio {
@@ -364,10 +368,10 @@ static const EbmlSyntax matroska_track_video[] = {
     { MATROSKA_ID_VIDEOPIXELHEIGHT,    EBML_UINT,  0, offsetof(MatroskaTrackVideo, pixel_height) },
     { MATROSKA_ID_VIDEOCOLORSPACE,     EBML_BIN,   0, offsetof(MatroskaTrackVideo, color_space) },
     { MATROSKA_ID_VIDEOALPHAMODE,      EBML_UINT,  0, offsetof(MatroskaTrackVideo, alpha_mode) },
-    { MATROSKA_ID_VIDEOPIXELCROPB,     EBML_NONE },
-    { MATROSKA_ID_VIDEOPIXELCROPT,     EBML_NONE },
-    { MATROSKA_ID_VIDEOPIXELCROPL,     EBML_NONE },
-    { MATROSKA_ID_VIDEOPIXELCROPR,     EBML_NONE },
+    { MATROSKA_ID_VIDEOPIXELCROPB,     EBML_UINT,  0, offsetof(MatroskaTrackVideo, crop_bottom) },
+    { MATROSKA_ID_VIDEOPIXELCROPT,     EBML_UINT,  0, offsetof(MatroskaTrackVideo, crop_top) },
+    { MATROSKA_ID_VIDEOPIXELCROPL,     EBML_UINT,  0, offsetof(MatroskaTrackVideo, crop_left) },
+    { MATROSKA_ID_VIDEOPIXELCROPR,     EBML_UINT,  0, offsetof(MatroskaTrackVideo, crop_right) },
     { MATROSKA_ID_VIDEODISPLAYUNIT,    EBML_NONE },
     { MATROSKA_ID_VIDEOFLAGINTERLACED, EBML_NONE },
     { MATROSKA_ID_VIDEOSTEREOMODE,     EBML_UINT,  0, offsetof(MatroskaTrackVideo, stereo_mode), { .u = MATROSKA_VIDEO_STEREOMODE_TYPE_NB } },
@@ -2151,6 +2155,16 @@ static int matroska_parse_tracks(AVFormatContext *s)
             /* export stereo mode flag as metadata tag */
             if (track->video.stereo_mode && track->video.stereo_mode < MATROSKA_VIDEO_STEREOMODE_TYPE_NB)
                 av_dict_set(&st->metadata, "stereo_mode", ff_matroska_video_stereo_mode[track->video.stereo_mode], 0);
+
+            /* export the matroska crop settings as metadata */
+            if (track->video.crop_bottom != 0)
+                av_dict_set_int(&st->metadata, "crop_bottom", track->video.crop_bottom, 0);
+            if (track->video.crop_top != 0)
+                av_dict_set_int(&st->metadata, "crop_top", track->video.crop_top, 0);
+            if (track->video.crop_left != 0)
+                av_dict_set_int(&st->metadata, "crop_left", track->video.crop_left, 0);
+            if (track->video.crop_right != 0)
+                av_dict_set_int(&st->metadata, "crop_right", track->video.crop_right, 0);
 
             /* export alpha mode flag as metadata tag  */
             if (track->video.alpha_mode)
